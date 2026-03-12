@@ -1,168 +1,159 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Plywood Quote 0.5mm</title>
+<title>Plywood Calculator</title>
 
 <style>
 
 body{
 font-family:Arial;
-max-width:390px;
-margin:auto;
-padding:15px;
+background:#f5f5f5;
+display:flex;
+justify-content:center;
+padding:20px;
 }
 
-h2{
-text-align:center;
+.app{
+width:420px;
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 4px 12px rgba(0,0,0,.1);
 }
 
-input{
-width:100%;
-padding:10px;
-margin:6px 0;
-font-size:16px;
-box-sizing:border-box;
+.row{
+display:flex;
+justify-content:space-between;
+margin-bottom:10px;
 }
 
-.output{
+.row label{
+width:55%;
+font-size:14px;
+}
+
+.row input{
+width:45%;
+padding:6px;
+}
+
+.result{
+margin-top:15px;
 font-weight:bold;
-margin:6px 0;
 }
 
-.blue{
-color:blue;
-}
-
-.red{
-color:red;
-}
+.blue{color:#2563eb;}
+.red{color:#dc2626;}
 
 </style>
 
 </head>
 
-
 <body>
 
-<h2>Plywood Quote 0.5mm</h2>
+<div class="app">
 
-<b>Thickness (mm)</b>
-<input id="thickness">
+<h3>Plywood Calculator</h3>
 
-<b>Bundles</b>
-<input id="bundles">
+<div class="row"><label>Thickness mm</label><input id="thickness"></div>
+<div class="row"><label>Bundles</label><input id="bundles"></div>
+<div class="row"><label>Pcs/Bundle</label><input id="pcsBundle"></div>
 
-<b>PCS / Bundle</b>
-<input id="pcsBundle">
+<div class="row"><label>USD Rate</label><input id="usdRate"></div>
 
-<b>EXW / PCS (USD)</b>
-<input id="exwPcs">
+<div class="row"><label>EXW / PCS (VND)</label><input id="exwPcs"></div>
+<div class="row"><label>EXW / CBM (VND)</label><input id="exwCbm"></div>
 
-<b>EXW / CBM Buying (USD)</b>
-<input id="exwCbm">
+<div class="row"><label>Logistics (VND)</label><input id="logistics"></div>
+<div class="row"><label>CFR Price (USD)</label><input id="cfr"></div>
 
-<b>USD Rate</b>
-<input id="rate">
+<div class="result">
 
-<b>CFR Price (USD)</b>
-<input id="cfr">
+<p>CBM BUY: <span id="cbmBuy">0</span></p>
+<p>CBM SELL: <span id="cbmSell">0</span></p>
+<p>CBM DIFF: <span id="cbmDiff">0</span></p>
 
-<hr>
+<p>PROFITS: <span id="profit">0</span></p>
 
-<div class="output">CBM Buy: <span id="cbmBuy"></span></div>
-<div class="output">CBM Sell: <span id="cbmSell"></span></div>
-<div class="output">CBM Diff: <span id="cbmDiff"></span></div>
+</div>
 
-<div class="output">Profits / CBM: <span id="profitCbm"></span></div>
-<div class="output">Profits Total: <span id="profitTotal"></span></div>
-
+</div>
 
 <script>
 
-const width=1220
-const length=2440
+const WIDTH=1.22
+const LENGTH=2.44
 
-function val(id){
-return Number(document.getElementById(id).value.replace(/,/g,''))||0
+const inputs=document.querySelectorAll("input")
+
+inputs.forEach(i=>i.addEventListener("input",calc))
+
+function n(id){
+return parseFloat(document.getElementById(id).value)||0
 }
 
 function format(x){
-return Number(x).toLocaleString()
+return Number(x).toLocaleString("en-US",{maximumFractionDigits:2})
 }
-
-document.querySelectorAll("input").forEach(i=>{
-i.addEventListener("input",calc)
-})
 
 function calc(){
 
-let thickness=val("thickness")
-let bundles=val("bundles")
-let pcsBundle=val("pcsBundle")
+let thickness=n("thickness")
+let bundles=n("bundles")
+let pcsBundle=n("pcsBundle")
 
-let exwPcs=val("exwPcs")
-let exwCbm=val("exwCbm")
+let usd=n("usdRate")
+let exwPcs=n("exwPcs")
+let exwCbm=n("exwCbm")
 
-let rate=val("rate")
-let cfr=val("cfr")
+let logistics=n("logistics")
+let cfr=n("cfr")
 
+let totalPcs=bundles*pcsBundle
 
-let pcs=bundles*pcsBundle
+let cbmPer=(thickness/1000)*WIDTH*LENGTH
+let cbmPerSell=((thickness+0.5)/1000)*WIDTH*LENGTH
 
-let thSell=thickness+0.5
+let cbmBuy=totalPcs*cbmPer
+let cbmSell=totalPcs*cbmPerSell
 
+let diff=cbmSell-cbmBuy
 
-let cbmBuy=pcs*(width/1000)*(length/1000)*(thickness/1000)
-
-let cbmSell=pcs*(width/1000)*(length/1000)*(thSell/1000)
-
-let cbmDiff=cbmSell-cbmBuy
-
-
-let costUSD=0
+let exwTotal=0
 
 if(exwPcs>0){
-costUSD=pcs*exwPcs
+
+exwTotal=exwPcs*totalPcs
+
+}else if(exwCbm>0){
+
+exwTotal=exwCbm*cbmBuy
+
 }
-else{
-costUSD=cbmBuy*exwCbm
-}
 
-let cost=costUSD*rate
+let cfrTotal=exwTotal+logistics
 
-let sell=cfr*rate
+let selling=cbmSell*cfr*usd
 
-let profit=sell-cost
+let profit=selling-cfrTotal
 
-let profitCbm=profit/cbmSell
+document.getElementById("cbmBuy").innerText=format(cbmBuy)
+document.getElementById("cbmSell").innerText=format(cbmSell)
+document.getElementById("cbmDiff").innerText=format(diff)
 
+let p=document.getElementById("profit")
 
-document.getElementById("cbmBuy").innerText=format(cbmBuy.toFixed(2))
-document.getElementById("cbmSell").innerText=format(cbmSell.toFixed(2))
-document.getElementById("cbmDiff").innerText=format(cbmDiff.toFixed(2))
+p.innerText=format(profit)
 
-let pt=document.getElementById("profitTotal")
-let pc=document.getElementById("profitCbm")
-
-pt.innerText=format(Math.round(profit))
-pc.innerText=format(Math.round(profitCbm))
-
-if(profit>=0){
-pt.className="output blue"
-pc.className="output blue"
-}
-else{
-pt.className="output red"
-pc.className="output red"
-}
+p.className=profit>=0?"blue":"red"
 
 }
 
 </script>
 
 </body>
-
 </html>
