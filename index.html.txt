@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Plywood Quote 0.5mm</title>
+
+<style>
+
+body{
+font-family:Arial;
+max-width:390px;
+margin:auto;
+padding:15px;
+}
+
+h2{
+text-align:center;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:6px 0;
+font-size:16px;
+box-sizing:border-box;
+}
+
+.output{
+font-weight:bold;
+margin:6px 0;
+}
+
+.blue{
+color:blue;
+}
+
+.red{
+color:red;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<h2>Plywood Quote 0.5mm</h2>
+
+<b>Thickness (mm)</b>
+<input id="thickness">
+
+<b>Bundles</b>
+<input id="bundles">
+
+<b>PCS / Bundle</b>
+<input id="pcsBundle">
+
+<b>EXW / PCS (USD)</b>
+<input id="exwPcs">
+
+<b>EXW / CBM Buying (USD)</b>
+<input id="exwCbm">
+
+<b>USD Rate</b>
+<input id="rate">
+
+<b>CFR Price (USD)</b>
+<input id="cfr">
+
+<hr>
+
+<div class="output">CBM Buy: <span id="cbmBuy"></span></div>
+<div class="output">CBM Sell: <span id="cbmSell"></span></div>
+<div class="output">CBM Diff: <span id="cbmDiff"></span></div>
+
+<div class="output">Profits / CBM: <span id="profitCbm"></span></div>
+<div class="output">Profits Total: <span id="profitTotal"></span></div>
+
+
+<script>
+
+const width=1220
+const length=2440
+
+function val(id){
+return Number(document.getElementById(id).value.replace(/,/g,''))||0
+}
+
+function format(x){
+return Number(x).toLocaleString()
+}
+
+document.querySelectorAll("input").forEach(i=>{
+i.addEventListener("input",calc)
+})
+
+function calc(){
+
+let thickness=val("thickness")
+let bundles=val("bundles")
+let pcsBundle=val("pcsBundle")
+
+let exwPcs=val("exwPcs")
+let exwCbm=val("exwCbm")
+
+let rate=val("rate")
+let cfr=val("cfr")
+
+
+let pcs=bundles*pcsBundle
+
+let thSell=thickness+0.5
+
+
+let cbmBuy=pcs*(width/1000)*(length/1000)*(thickness/1000)
+
+let cbmSell=pcs*(width/1000)*(length/1000)*(thSell/1000)
+
+let cbmDiff=cbmSell-cbmBuy
+
+
+let costUSD=0
+
+if(exwPcs>0){
+costUSD=pcs*exwPcs
+}
+else{
+costUSD=cbmBuy*exwCbm
+}
+
+let cost=costUSD*rate
+
+let sell=cfr*rate
+
+let profit=sell-cost
+
+let profitCbm=profit/cbmSell
+
+
+document.getElementById("cbmBuy").innerText=format(cbmBuy.toFixed(2))
+document.getElementById("cbmSell").innerText=format(cbmSell.toFixed(2))
+document.getElementById("cbmDiff").innerText=format(cbmDiff.toFixed(2))
+
+let pt=document.getElementById("profitTotal")
+let pc=document.getElementById("profitCbm")
+
+pt.innerText=format(Math.round(profit))
+pc.innerText=format(Math.round(profitCbm))
+
+if(profit>=0){
+pt.className="output blue"
+pc.className="output blue"
+}
+else{
+pt.className="output red"
+pc.className="output red"
+}
+
+}
+
+</script>
+
+</body>
+</html>
